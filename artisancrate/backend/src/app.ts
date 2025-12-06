@@ -1,9 +1,9 @@
 import express, { Application } from "express";
 import cors from "cors";
-import router from "./routes";
-import dotenv from "dotenv";
-
-dotenv.config();
+import apiRouter from "./routes";
+import { requestLogger } from "./middlewares/requestLogger";
+import { errorHandler } from "./middlewares/errorHandler";
+import { AppError } from "./core/AppError";
 
 export function createApp(): Application {
   const app = express();
@@ -11,11 +11,15 @@ export function createApp(): Application {
   app.use(cors());
   app.use(express.json());
 
-  app.use("/api", router);
+  app.use(requestLogger);
 
-  app.use((req, res) => {
-    res.status(404).json({ message: "Not Found" });
+  app.use("/api", apiRouter);
+
+  app.use((req, res, next) => {
+    next(new AppError("Not Found", 404, "NOT_FOUND"));
   });
+
+  app.use(errorHandler);
 
   return app;
 }

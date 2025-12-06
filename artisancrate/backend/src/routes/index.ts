@@ -1,13 +1,8 @@
-import { Router, Request, Response } from "express";
+import { Router } from "express";
+import healthRoutes from "./health.routes";
 
 const router = Router();
 
-router.get("/health", (req: Request, res: Response) => {
-  res.json({
-    status: "ok",
-    service: "artisancrate-backend",
-    timestamp: new Date().toISOString(),
-  });
-});
+router.use("/", healthRoutes);
 
 export default router;

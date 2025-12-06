@@ -1,9 +1,9 @@
 import { createApp } from "./app";
+import { env } from "./config/env";
+import { logger } from "./libs/logger";
 
 const app = createApp();
 
-const PORT = process.env.PORT || 4000;
-
-app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
+app.listen(env.port, () => {
+  logger.info(`Backend running on http://localhost:${env.port}`);
 });
