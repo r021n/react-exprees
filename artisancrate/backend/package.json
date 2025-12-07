@@ -5,7 +5,11 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "typeorm": "typeorm-ts-node-commonjs",
+    "migration:generate": "npm run typeorm -- migration:generate ./src/migrations/InitSchema -d ./src/config/data-source.ts",
+    "migration:run": "npm run typeorm -- migration:run -d ./src/config/data-source.ts",
+    "migration:revert": "npm run typeorm -- migration:revert -d ./src/config/data-source.ts"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +19,9 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "pg": "^8.16.3",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.28",
     "zod": "^4.1.13"
   },
   "devDependencies": {
