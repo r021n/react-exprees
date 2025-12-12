@@ -9,9 +9,7 @@ export const createPlanSchema = z.object({
   body: z.object({
     name: z.string().min(1, "Nama wajib diisi"),
     description: z.string().optional(),
-    billingPeriod: z
-      .enum(["weekly", "monthly"])
-      .refine((val) => !val, { message: "billingPeriod wajib diisi" }),
+    billingPeriod: z.enum(["weekly", "monthly"]),
     billingInterval: z
       .number()
       .int()

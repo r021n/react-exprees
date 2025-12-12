@@ -50,6 +50,8 @@ export class SubscriptionPlanService {
     });
 
     return AppDataSource.transaction(async (manager) => {
+      const planRepo = new SubscriptionPlanRepository(manager);
+
       const plan = manager.create(SubscriptionPlan, {
         name: input.name,
         description: input.description ?? null,
@@ -72,7 +74,7 @@ export class SubscriptionPlanService {
 
       await manager.save(items);
 
-      return this.planRepo.findByIdWithItems(plan.id);
+      return planRepo.findByIdWithItems(plan.id);
     });
   }
 
@@ -99,6 +101,8 @@ export class SubscriptionPlanService {
 
       await manager.save(plan);
 
+      const planRepo = new SubscriptionPlanRepository(manager);
+
       if (input.items) {
         await manager.delete(SubscriptionPlanItem, {
           subscriptionPlanId: plan.id,
@@ -119,18 +123,18 @@ export class SubscriptionPlanService {
           }
         });
 
-        const items = input.items.map((i, idx) => {
+        const items = input.items.map((i, idx) =>
           manager.create(SubscriptionPlanItem, {
             subscriptionPlanId: plan.id,
             productId: products[idx]!.id,
             quantity: i.quantity,
-          });
-        });
+          })
+        );
 
         await manager.save(items);
       }
 
-      return this.planRepo.findByIdWithItems(plan.id);
+      return planRepo.findByIdWithItems(plan.id);
     });
   }
 
