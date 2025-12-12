@@ -1,12 +1,14 @@
-import { Repository } from "typeorm";
+import { Repository, EntityManager } from "typeorm";
 import { AppDataSource } from "../config/data-source";
 import { SubscriptionPlan } from "../entities/SubscriptionPlan";
 
 export class SubscriptionPlanRepository {
   private repo: Repository<SubscriptionPlan>;
 
-  constructor() {
-    this.repo = AppDataSource.getRepository(SubscriptionPlan);
+  constructor(private manager?: EntityManager) {
+    this.repo = manager
+      ? manager.getRepository(SubscriptionPlan)
+      : AppDataSource.getRepository(SubscriptionPlan);
   }
 
   findActiveWithItems() {
