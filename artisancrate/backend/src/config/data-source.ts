@@ -7,6 +7,9 @@ import { UserAddress } from "../entities/UserAddress";
 import { Product } from "../entities/Product";
 import { SubscriptionPlan } from "../entities/SubscriptionPlan";
 import { SubscriptionPlanItem } from "../entities/SubscriptionPlanItem";
+import { UserSubscription } from "../entities/UserSubscription";
+import { Invoice } from "../entities/Invoice";
+import { Order } from "../entities/Order";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -19,6 +22,9 @@ export const AppDataSource = new DataSource({
     Product,
     SubscriptionPlan,
     SubscriptionPlanItem,
+    UserSubscription,
+    Invoice,
+    Order,
   ],
   migrations: [path.join(__dirname, "../migrations/*.{ts,js}")],
 });
