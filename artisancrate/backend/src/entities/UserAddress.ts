@@ -1,6 +1,15 @@
-import { Entity, Column, ManyToOne, JoinColumn, Index } from "typeorm";
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  Index,
+  OneToMany,
+} from "typeorm";
 import { BaseModel } from "./BaseModel";
 import { User } from "./User";
+import { UserSubscription } from "./UserSubscription";
+import { Order } from "./Order";
 
 @Entity("user_addresses")
 export class UserAddress extends BaseModel {
@@ -46,4 +55,13 @@ export class UserAddress extends BaseModel {
 
   @Column({ name: "is_default", type: "boolean", default: false })
   isDefault!: boolean;
+
+  @OneToMany(
+    () => UserSubscription,
+    (subscription) => subscription.shippingAddress
+  )
+  subscriptions!: UserSubscription[];
+
+  @OneToMany(() => Order, (order) => order.shippingAddress)
+  orders!: Order[];
 }

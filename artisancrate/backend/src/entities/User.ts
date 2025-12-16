@@ -1,6 +1,9 @@
 import { Entity, Column, OneToMany, Unique } from "typeorm";
 import { BaseModel } from "./BaseModel";
 import { UserAddress } from "./UserAddress";
+import { UserSubscription } from "./UserSubscription";
+import { Invoice } from "./Invoice";
+import { Order } from "./Order";
 
 export type UserRole = "user" | "admin";
 
@@ -24,4 +27,13 @@ export class User extends BaseModel {
 
   @OneToMany(() => UserAddress, (address) => address.user)
   addresses!: UserAddress[];
+
+  @OneToMany(() => UserSubscription, (subscription) => subscription.user)
+  subscriptions!: UserSubscription[];
+
+  @OneToMany(() => Invoice, (invoice) => invoice.user)
+  invoices!: Invoice[];
+
+  @OneToMany(() => Order, (order) => order.user)
+  orders!: Order[];
 }

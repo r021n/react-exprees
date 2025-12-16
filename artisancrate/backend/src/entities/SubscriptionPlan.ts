@@ -1,6 +1,7 @@
 import { Entity, Column, OneToMany, Index } from "typeorm";
 import { BaseModel } from "./BaseModel";
 import { SubscriptionPlanItem } from "./SubscriptionPlanItem";
+import { UserSubscription } from "./UserSubscription";
 
 export type BillingPeriod = "weekly" | "monthly";
 
@@ -30,4 +31,10 @@ export class SubscriptionPlan extends BaseModel {
 
   @OneToMany(() => SubscriptionPlanItem, (item) => item.subscriptionPlan)
   items!: SubscriptionPlanItem[];
+
+  @OneToMany(
+    () => UserSubscription,
+    (subscription) => subscription.subscriptionPlan
+  )
+  subscriptions!: UserSubscription[];
 }
