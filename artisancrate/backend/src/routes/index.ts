@@ -5,6 +5,7 @@ import meRoutes from "./me.routes";
 import productRoutes from "./product.routes";
 import subscriptionPlanRoutes from "./subscriptionPlan.routes";
 import adminSubsmissionPlanRoutes from "./adminSubscriptionPlan.routes";
+import subscriptionRoutes from "./subscription.routes";
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use("/me", meRoutes);
 router.use("/products", productRoutes);
 router.use("/subscription-plans", subscriptionPlanRoutes);
 router.use("/admin/subscription-plans", adminSubsmissionPlanRoutes);
+router.use("/subscriptions", subscriptionRoutes);
 
 export default router;
