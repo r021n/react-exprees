@@ -16,4 +16,8 @@ export const env = {
   databaseUrl: process.env.DATABASE_URL as string,
   jwtSecret: process.env.JWT_SECRET as string,
   jwtExpiresIn: (process.env.JWT_EXPIRES_IN as StringValue) ?? "7d",
+
+  midtransServerKey: process.env.MIDTRANS_SERVER_KEY || "",
+  midtransClientKey: process.env.MIDTRANS_CLIENT_KEY || "",
+  midtransIsProduction: process.env.MIDTRANS_IS_PRODUCTION === "true",
 };
