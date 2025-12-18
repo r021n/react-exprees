@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { SubscriptionService } from "../services/SubscriptionService";
+import { PaymentService } from "../services/PaymentService";
 import { AppError } from "../core/AppError";
 
 const subscriptionService = new SubscriptionService();
+const paymentService = new PaymentService();
 
 export class SubscriptionController {
   static async createSubscription(
@@ -25,9 +27,12 @@ export class SubscriptionController {
           paymentMethodType: payment_method_type,
         });
 
+      const invoiceWithPayment =
+        await paymentService.createSnapTransactionForInvoice(invoice.id);
+
       res.status(201).json({
         success: true,
-        data: { subscription, initialInvoice: invoice },
+        data: { subscription, initialInvoice: invoiceWithPayment },
       });
     } catch (error) {
       next(error);
