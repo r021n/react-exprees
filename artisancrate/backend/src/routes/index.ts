@@ -6,6 +6,8 @@ import productRoutes from "./product.routes";
 import subscriptionPlanRoutes from "./subscriptionPlan.routes";
 import adminSubsmissionPlanRoutes from "./adminSubscriptionPlan.routes";
 import subscriptionRoutes from "./subscription.routes";
+import invoiceRoutes from "./invoice.routes";
+import paymentRoutes from "./payment.routes";
 
 const router = Router();
 
@@ -16,5 +18,7 @@ router.use("/products", productRoutes);
 router.use("/subscription-plans", subscriptionPlanRoutes);
 router.use("/admin/subscription-plans", adminSubsmissionPlanRoutes);
 router.use("/subscriptions", subscriptionRoutes);
+router.use("/invoices", invoiceRoutes);
+router.use("/payment", paymentRoutes);
 
 export default router;
