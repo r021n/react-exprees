@@ -9,6 +9,7 @@ import {
 } from "../entities/UserSubscription";
 import { Invoice } from "../entities/Invoice";
 import { toDateOnly, addDays } from "../libs/dateUtils";
+import { generateInvoiceNumber } from "../libs/invoiceUtils";
 
 interface CreateSubscriptionInput {
   userId: number;
@@ -24,14 +25,6 @@ export class SubscriptionService {
   constructor() {
     this.planRepo = new SubscriptionPlanRepository();
     this.addressRepo = new UserAddressRepository();
-  }
-
-  private async generateInvoiceNumber(manager: EntityManager): Promise<string> {
-    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const randomPart = Math.floor(100000 + Math.random() + 900000);
-
-    const invoiceNumber = `INV-${datePart}-${randomPart}`;
-    return invoiceNumber;
   }
 
   async createSubscription(input: CreateSubscriptionInput) {
@@ -93,7 +86,7 @@ export class SubscriptionService {
 
       await subRepo.save(subscription);
 
-      const invoiceNumber = await this.generateInvoiceNumber(manager);
+      const invoiceNumber = await generateInvoiceNumber(manager);
 
       const invoice = invoiceRepo.create({
         userSubscriptionId: subscription.id,
