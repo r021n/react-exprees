@@ -8,6 +8,8 @@ import adminSubsmissionPlanRoutes from "./adminSubscriptionPlan.routes";
 import subscriptionRoutes from "./subscription.routes";
 import invoiceRoutes from "./invoice.routes";
 import paymentRoutes from "./payment.routes";
+import orderRoutes from "./order.routes";
+import adminOrdersRoutes from "./adminOrders.routes";
 
 const router = Router();
 
@@ -20,5 +22,7 @@ router.use("/admin/subscription-plans", adminSubsmissionPlanRoutes);
 router.use("/subscriptions", subscriptionRoutes);
 router.use("/invoices", invoiceRoutes);
 router.use("/payment", paymentRoutes);
+router.use("/orders", orderRoutes);
+router.use("/admin/orders", adminOrdersRoutes);
 
 export default router;
