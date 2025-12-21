@@ -12,6 +12,9 @@ import {
 import { MidtransNotificationBody } from "../types/midtrans";
 import { addMonths, addWeeks, toDateOnly } from "../libs/dateUtils";
 import { logger } from "../libs/logger";
+import { OrderService } from "./OrderService";
+
+const orderService = new OrderService();
 
 export class PaymentService {
   /**
@@ -215,26 +218,7 @@ export class PaymentService {
           await subscriptionRepo.save(subscription);
         }
 
-        const existingOrder = await orderRepo.findOne({
-          where: { invoiceId: invoice.id },
-        });
-
-        if (!existingOrder && subscription) {
-          const order = orderRepo.create({
-            userSubscriptionId: subscription.id,
-            invoiceId: invoice.id,
-            userId: subscription.userId,
-            shippingAddressId: subscription.shippingAddressId,
-            status: "pending_fulfillment",
-            shippingCourier: null,
-            trackingNumber: null,
-            shippingDate: null,
-            deliveredDate: null,
-            notes: null,
-          });
-
-          await orderRepo.save(order);
-        }
+        await orderService.createOrderIfNotExistsForInvoice(invoice, manager);
       }
 
       await invoiceRepo.save(invoice);
