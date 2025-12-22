@@ -1,11 +1,12 @@
-import { EntityManager } from "typeorm";
 import { SubscriptionPlanRepository } from "../repositories/SubscriptionPlanRepository";
 import { UserAddressRepository } from "../repositories/UserAddressRepository";
+import { UserSubscriptionRepository } from "../repositories/UserSubscriptionRepository";
 import { AppError } from "../core/AppError";
 import { AppDataSource } from "../config/data-source";
 import {
   UserSubscription,
   PaymentMethodType,
+  UserSubscriptionStatus,
 } from "../entities/UserSubscription";
 import { Invoice } from "../entities/Invoice";
 import { toDateOnly, addDays } from "../libs/dateUtils";
@@ -21,10 +22,12 @@ interface CreateSubscriptionInput {
 export class SubscriptionService {
   private planRepo: SubscriptionPlanRepository;
   private addressRepo: UserAddressRepository;
+  private subRepo: UserSubscriptionRepository;
 
   constructor() {
     this.planRepo = new SubscriptionPlanRepository();
     this.addressRepo = new UserAddressRepository();
+    this.subRepo = new UserSubscriptionRepository();
   }
 
   async createSubscription(input: CreateSubscriptionInput) {
@@ -39,7 +42,7 @@ export class SubscriptionService {
       );
     }
 
-    const plan = await this.planRepo.findByid(subscriptionPlanId);
+    const plan = await this.planRepo.findById(subscriptionPlanId);
     if (!plan || !plan.isActive) {
       throw new AppError(
         "Paket langganan tidak ditemukan atau tidak aktif",
@@ -107,5 +110,141 @@ export class SubscriptionService {
 
       return { subscription, invoice };
     });
+  }
+
+  getUserSubscriptions(userId: number) {
+    return this.subRepo.findByUser(userId);
+  }
+
+  async getUserSubscriptionDetail(userId: number, subId: number) {
+    const sub = await this.subRepo.findByIdAndUser(subId, userId);
+    if (!sub) {
+      throw new AppError(
+        "Subscriptiontidak ditemukan",
+        404,
+        "SUBSCRIPTION_NOT_FOUND"
+      );
+    }
+
+    return sub;
+  }
+
+  private ensureCancellable(status: UserSubscriptionStatus) {
+    if (status === "cancelled" || status === "expired") {
+      throw new AppError(
+        "Subscription sudah tidak aktif",
+        400,
+        "SUBSCRIPTION_ALREADY_TERMINATED"
+      );
+    }
+  }
+
+  async cancelSubscription(userId: number, subId: number) {
+    const sub = await this.subRepo.findByIdAndUser(subId, userId);
+    if (!sub) {
+      throw new AppError(
+        "Subscription tidak ditemukan",
+        404,
+        "SUBSCRIPTION_NOT_FOUND"
+      );
+    }
+
+    this.ensureCancellable(sub.status);
+
+    sub.status = "cancelled";
+    sub.cancelledAt = new Date();
+
+    return this.subRepo.save(sub);
+  }
+
+  async pauseSubscription(userId: number, subId: number) {
+    const sub = await this.subRepo.findByIdAndUser(subId, userId);
+    if (!sub) {
+      throw new AppError(
+        "Subscription tidak ditemukan",
+        404,
+        "SUBSCRIPTION_NOT_FOUND"
+      );
+    }
+
+    if (sub.status !== "active") {
+      throw new AppError(
+        "Hanya subscription aktif yang bisa dipause",
+        400,
+        "INVALID_STATUS"
+      );
+    }
+
+    sub.status = "paused";
+    sub.pausedAt = new Date();
+
+    return this.subRepo.save(sub);
+  }
+
+  async resumeSubscription(userId: number, subId: number) {
+    const sub = await this.subRepo.findByIdAndUser(subId, userId);
+    if (!sub) {
+      throw new AppError(
+        "Subscription tidak ditemukan",
+        404,
+        "SUBSCRIPTION_NOT_FOUND"
+      );
+    }
+
+    if (sub.status !== "paused") {
+      throw new AppError(
+        "Hanya subscription dengan status pause yang bisa diresume",
+        400,
+        "INVALID_STATUS"
+      );
+    }
+
+    sub.status = "active";
+    sub.pausedAt = null;
+    sub.nextBillingDate = toDateOnly(new Date());
+
+    return this.subRepo.save(sub);
+  }
+
+  // -------- Admin-facing methods --------
+
+  getAllSubscriptions(status?: UserSubscriptionStatus) {
+    return this.subRepo.findAllWithFilter(status);
+  }
+
+  async getSubscriptionDetailAdmin(id: number) {
+    const sub = await this.subRepo.findByIdWithRelations(id);
+    if (!sub) {
+      throw new AppError(
+        "Subscription tidak ditemukan",
+        404,
+        "SUBSCRIPTION_NOT_FOUND"
+      );
+    }
+
+    return sub;
+  }
+
+  async updateSubscriptionStatusAdmin(
+    id: number,
+    status: UserSubscriptionStatus
+  ) {
+    const sub = await this.subRepo.findById(id);
+    if (!sub) {
+      throw new AppError(
+        "Subscription tidak ditemukan",
+        404,
+        "SUBSCRIPTION_NOT_FOUND"
+      );
+    }
+
+    sub.status = status;
+
+    const now = new Date();
+    if (status === "cancelled") sub.cancelledAt = now;
+    if (status === "paused") sub.pausedAt = now;
+    if (status === "active") sub.pausedAt = null;
+
+    return this.subRepo.save(sub);
   }
 }
