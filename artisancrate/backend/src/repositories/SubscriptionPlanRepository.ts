@@ -26,7 +26,7 @@ export class SubscriptionPlanRepository {
     });
   }
 
-  findByid(id: number) {
+  findById(id: number) {
     return this.repo.findOne({ where: { id } });
   }
 
