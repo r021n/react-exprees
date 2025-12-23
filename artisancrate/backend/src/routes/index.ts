@@ -10,6 +10,8 @@ import invoiceRoutes from "./invoice.routes";
 import paymentRoutes from "./payment.routes";
 import orderRoutes from "./order.routes";
 import adminOrdersRoutes from "./adminOrders.routes";
+import adminSubscriptionsRoutes from "./adminSubscriptions.route";
+import adminInvoicesRoutes from "./adminInvoices.routes";
 
 const router = Router();
 
@@ -24,5 +26,7 @@ router.use("/invoices", invoiceRoutes);
 router.use("/payment", paymentRoutes);
 router.use("/orders", orderRoutes);
 router.use("/admin/orders", adminOrdersRoutes);
+router.use("/admin/subscriptions", adminSubscriptionsRoutes);
+router.use("/admin/invoices", adminInvoicesRoutes);
 
 export default router;
