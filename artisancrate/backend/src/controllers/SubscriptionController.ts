@@ -38,4 +38,112 @@ export class SubscriptionController {
       next(error);
     }
   }
+
+  static async getMySubscriptions(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      if (!req.user) {
+        throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
+      }
+
+      const subs = await subscriptionService.getUserSubscriptions(req.user.id);
+      res.json({ success: true, data: subs });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getMySubscriptionDetail(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      if (!req.user) {
+        throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
+      }
+
+      const id = Number(req.params.id);
+      if (Number.isNaN(id)) {
+        throw new AppError("ID tidak valid", 400, "INVALID_ID");
+      }
+
+      const sub = await subscriptionService.getUserSubscriptionDetail(
+        req.user.id,
+        id
+      );
+      res.json({ success: true, data: sub });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async cancelMySubscription(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      if (!req.user) {
+        throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
+      }
+
+      const id = Number(req.params.id);
+      if (Number.isNaN(id)) {
+        throw new AppError("ID tidak valid", 400, "INVALID_ID");
+      }
+
+      const sub = await subscriptionService.cancelSubscription(req.user.id, id);
+      res.json({ success: true, data: sub });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async pauseMySubscription(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      if (!req.user) {
+        throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
+      }
+
+      const id = Number(req.params.id);
+      if (Number.isNaN(id)) {
+        throw new AppError("ID tidak valid", 400, "INVALID_ID");
+      }
+
+      const sub = await subscriptionService.pauseSubscription(req.user.id, id);
+      res.json({ success: true, data: sub });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async resumeMySubscription(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      if (!req.user) {
+        throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
+      }
+
+      const id = Number(req.params.id);
+      if (Number.isNaN(id)) {
+        throw new AppError("ID tidak valid", 400, "INVALID_ID");
+      }
+
+      const sub = await subscriptionService.resumeSubscription(req.user.id, id);
+      res.json({ success: true, data: sub });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
