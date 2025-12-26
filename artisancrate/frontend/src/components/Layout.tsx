@@ -20,12 +20,22 @@ function Layout({ children }: PropsWithChildren) {
           marginBottom: "1rem",
         }}
       >
-        <nav style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+        <nav
+          style={{
+            display: "flex",
+            gap: "1rem",
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
           <Link to="/">Home</Link>
 
           {user ? (
             <>
               <Link to="/dashboard">Dashboard</Link>
+              <Link to="/subscriptions">Subscriptions</Link>
+              <Link to="/invoices">Invoices</Link>
+              <Link to="/orders">Orders</Link>
               <Link to="/profile">Profil</Link>
               <button onClick={handleLogout}>Logout</button>
             </>
