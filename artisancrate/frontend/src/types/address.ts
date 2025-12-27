@@ -9,7 +9,7 @@ export interface UserAddress {
   city: string;
   province: string;
   postalCode: string;
-  county: string;
+  country: string;
   isDefault: boolean;
   createdAt: string;
   updatedAt: string;
