@@ -69,10 +69,8 @@ function InvoiceDetail() {
       </p>
       <p>Jumlah: {formatPriceIDR(invoice.amount)}</p>
       <p>Jatuh tempo: {formatDate(invoice.dueDate)}</p>
-      <p>
-        Dibuat: {formatDate(invoice.createdAt)} Dibayar:{" "}
-        {invoice.paidAt ? formatDate(invoice.paidAt) : "-"}
-      </p>
+      <p>Dibuat: {formatDate(invoice.createdAt)}</p>
+      <p>Dibayar: {invoice.paidAt ? formatDate(invoice.paidAt) : "-"}</p>
 
       {invoice.userSubscription?.subscriptionPlan && (
         <p>Subscriptions: {invoice.userSubscription.subscriptionPlan.name}</p>

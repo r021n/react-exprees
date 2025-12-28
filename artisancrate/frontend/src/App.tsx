@@ -8,6 +8,12 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import PlanDetail from "./pages/PlanDetail";
 import ConfirmSubscriptionPlan from "./pages/ConfirmSubscription";
+import Subscriptions from "./pages/Subscriptions";
+import SubscriptionDetail from "./pages/SubscriptionDetail";
+import Invoices from "./pages/Invoices";
+import InvoiceDetail from "./pages/InvoiceDetail";
+import Orders from "./pages/Orders";
+import OrderDetail from "./pages/OrderDetail";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -28,6 +34,15 @@ function App() {
             path="/subscribe/confirm"
             element={<ConfirmSubscriptionPlan />}
           />
+
+          <Route path="/subscriptions" element={<Subscriptions />} />
+          <Route path="/subscriptions/:id" element={<SubscriptionDetail />} />
+
+          <Route path="/invoices" element={<Invoices />} />
+          <Route path="/invoices/:id" element={<InvoiceDetail />} />
+
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/Orders/:id" element={<OrderDetail />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />
