@@ -36,6 +36,7 @@ function Layout({ children }: PropsWithChildren) {
               <Link to="/subscriptions">Subscriptions</Link>
               <Link to="/invoices">Invoices</Link>
               <Link to="/orders">Orders</Link>
+              {user.role === "admin" && <Link to="/admin">Admin</Link>}
               <Link to="/profile">Profil</Link>
               <button onClick={handleLogout}>Logout</button>
             </>
