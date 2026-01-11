@@ -15,6 +15,14 @@ import InvoiceDetail from "./pages/InvoiceDetail";
 import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
+import AdminLayout from "./components/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminSubscriptionPlans from "./pages/admin/AdminSubscriptionPlans";
+import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
+import AdminSubscriptionDetail from "./pages/admin/AdminSubscriptionDetail";
+import AdminInvoices from "./pages/admin/AdminInvoices";
+import AdminOrders from "./pages/admin/AdminOrders";
 
 function App() {
   return (
@@ -43,6 +51,23 @@ function App() {
 
           <Route path="/orders" element={<Orders />} />
           <Route path="/Orders/:id" element={<OrderDetail />} />
+        </Route>
+
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route
+              path="subscription-plans"
+              element={<AdminSubscriptionPlans />}
+            />
+            <Route path="subscriptions" element={<AdminSubscriptions />} />
+            <Route
+              path="subscriptions/:id"
+              element={<AdminSubscriptionDetail />}
+            />
+            <Route path="invoices" element={<AdminInvoices />} />
+            <Route path="orders" element={<AdminOrders />} />
+          </Route>
         </Route>
 
         <Route path="*" element={<NotFound />} />
