@@ -34,9 +34,13 @@ export class SubscriptionPlanService {
     return this.planRepo.findActiveWithItems();
   }
 
+  getAllPlansWithItems() {
+    return this.planRepo.findAllWithItems();
+  }
+
   async createPlan(input: PlanInput) {
     const products = await Promise.all(
-      input.items.map((i) => this.productRepo.findById(i.productId))
+      input.items.map((i) => this.productRepo.findById(i.productId)),
     );
 
     products.forEach((p, idx) => {
@@ -44,7 +48,7 @@ export class SubscriptionPlanService {
         throw new AppError(
           `Product dengan ID ${input.items[idx]?.productId} tidak ditemukan`,
           400,
-          "PRODUCT_NOT_FOUND"
+          "PRODUCT_NOT_FOUND",
         );
       }
     });
@@ -84,7 +88,7 @@ export class SubscriptionPlanService {
       throw new AppError(
         "Paket langganan tidak ditemukan",
         404,
-        "PLAN_NOT_FOUND"
+        "PLAN_NOT_FOUND",
       );
     }
 
@@ -109,7 +113,7 @@ export class SubscriptionPlanService {
         });
 
         const products = await Promise.all(
-          input.items.map((i) => this.productRepo.findById(i.productId))
+          input.items.map((i) => this.productRepo.findById(i.productId)),
         );
         products.forEach((p, idx) => {
           if (!p) {
@@ -118,7 +122,7 @@ export class SubscriptionPlanService {
                 input.items![idx]?.productId
               } tidak ditemukan`,
               404,
-              "PRODUCT_NOT_FOUND"
+              "PRODUCT_NOT_FOUND",
             );
           }
         });
@@ -128,7 +132,7 @@ export class SubscriptionPlanService {
             subscriptionPlanId: plan.id,
             productId: products[idx]!.id,
             quantity: i.quantity,
-          })
+          }),
         );
 
         await manager.save(items);
@@ -139,12 +143,12 @@ export class SubscriptionPlanService {
   }
 
   async deletePlan(planId: number) {
-    const plan = await this.planRepo.findByid(planId);
+    const plan = await this.planRepo.findById(planId);
     if (!plan) {
       throw new AppError(
         "Paker langganan tidak ditemukan",
         404,
-        "PLAN_NOT_FOUND"
+        "PLAN_NOT_FOUND",
       );
     }
 

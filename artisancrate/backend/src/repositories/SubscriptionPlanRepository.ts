@@ -11,6 +11,17 @@ export class SubscriptionPlanRepository {
       : AppDataSource.getRepository(SubscriptionPlan);
   }
 
+  findAllWithItems() {
+    return this.repo.find({
+      relations: {
+        items: { product: true },
+      },
+      order: {
+        createdAt: "DESC",
+      },
+    });
+  }
+
   findActiveWithItems() {
     return this.repo.find({
       where: { isActive: true },
@@ -31,7 +42,7 @@ export class SubscriptionPlanRepository {
   }
 
   async createAndSave(
-    data: Partial<SubscriptionPlan>
+    data: Partial<SubscriptionPlan>,
   ): Promise<SubscriptionPlan> {
     const plan = this.repo.create(data);
     return this.repo.save(plan);

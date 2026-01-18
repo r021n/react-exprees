@@ -7,10 +7,23 @@ export class SubscriptionPlanController {
   static async getActivePlans(
     _req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) {
     try {
       const plans = await planService.getActivePlansWithItems();
+      res.json({ success: true, data: plans });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getAllPlansAdmin(
+    _req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const plans = await planService.getAllPlansWithItems();
       res.json({ success: true, data: plans });
     } catch (error) {
       next(error);

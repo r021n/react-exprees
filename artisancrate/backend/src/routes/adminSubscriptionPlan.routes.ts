@@ -12,15 +12,16 @@ const router = Router();
 
 router.use(authMiddleware, adminOnly);
 
+router.get("/", SubscriptionPlanController.getAllPlansAdmin);
 router.post(
   "/",
   validateRequest(createPlanSchema),
-  SubscriptionPlanController.createPlan
+  SubscriptionPlanController.createPlan,
 );
 router.put(
   "/:id",
   validateRequest(updatePlanSchema),
-  SubscriptionPlanController.updatePlan
+  SubscriptionPlanController.updatePlan,
 );
 router.delete("/:id", SubscriptionPlanController.deletePlan);
 
