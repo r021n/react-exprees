@@ -41,7 +41,7 @@ function AdminSubscriptionPlans() {
     setError(null);
     try {
       const [planRes, productRes] = await Promise.all([
-        api.get<ApiResponse<SubscriptionPlan[]>>("/subscription-plans"),
+        api.get<ApiResponse<SubscriptionPlan[]>>("/admin/subscription-plans"),
         api.get<ApiResponse<Product[]>>("/products"),
       ]);
       setPlans(planRes.data.data);
@@ -169,8 +169,8 @@ function AdminSubscriptionPlans() {
                       {savingId === p.id
                         ? "Menyimpan..."
                         : p.isActive
-                        ? "Nonaktifkan"
-                        : "Aktifkan"}
+                          ? "Nonaktifkan"
+                          : "Aktifkan"}
                     </button>
                   </td>
                 </tr>
@@ -178,8 +178,8 @@ function AdminSubscriptionPlans() {
             </tbody>
           </table>
           <p style={{ fontSize: "0.85rem", marginTop: "0.25rem" }}>
-            Catatan: enpoint list hanya menampilkan plan aktif; plan yang
-            dinonaktifkan tidak akan muncul disini.
+            Endpoint ini menampilkan semua plan (aktif maupun tidak aktif).
+            Hanya plan aktif yang dipakai di halaman publik.
           </p>
         </>
       )}
@@ -260,7 +260,7 @@ function AdminSubscriptionPlans() {
               }))
             }
           >
-            <option>--- pilih produ ---</option>
+            <option>--- pilih produk ---</option>
             {products.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name} ({p.type})
