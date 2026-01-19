@@ -2,69 +2,226 @@ import { useEffect, useState, FormEvent, ChangeEvent } from "react";
 import { api } from "../lib/api";
 import { useAuthStore } from "../store/authStore";
 import type { User } from "../types/auth";
+import type { UserAddress } from "../types/address";
+import type { ApiResponse } from "../types/common";
 import { AxiosError } from "axios";
+
+interface ProfileForm {
+  name: string;
+  phone: string;
+}
+
+interface AddressForm {
+  label: string;
+  recipientName: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  country: string;
+  isDefault: boolean;
+}
+
+function emptyAddressForm(): AddressForm {
+  return {
+    label: "",
+    recipientName: "",
+    phone: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    province: "",
+    postalCode: "",
+    country: "Indonesia",
+    isDefault: false,
+  };
+}
 
 function Profile() {
   const { user: authUser, setAuth, token } = useAuthStore();
 
-  const [form, setForm] = useState({
+  const [profileForm, setProfileForm] = useState<ProfileForm>({
     name: authUser?.name ?? "",
     phone: authUser?.phone ?? "",
   });
-  const [loading, setLoading] = useState(!authUser);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [profileLoading, setProfileLoading] = useState(!authUser);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await api.get<{ success: boolean; data: User }>("/me");
-        const user = res.data.data;
+  const [addresses, setAddresses] = useState<UserAddress[]>([]);
+  const [addressesLoading, setAddressesLoading] = useState(true);
+  const [addressesError, setAddressesError] = useState<string | null>(null);
 
-        if (token) {
-          setAuth(user, token);
-        }
-        setForm({ name: user.name, phone: user.phone ?? "" });
-      } catch (error) {
-        const err = error as AxiosError<{ message: string }>;
-        const message = err?.response?.data?.message ?? "Gagal memuat profil";
-        setError(message);
-      } finally {
-        setLoading(false);
+  const [newAddressForm, setNewAddressForm] =
+    useState<AddressForm>(emptyAddressForm());
+  const [creatingAddress, setCreatingAddress] = useState(false);
+
+  const [editingAddress, setEditingAddress] = useState<UserAddress | null>(
+    null,
+  );
+  const [editingAddressForm, setEditingAddressForm] =
+    useState<AddressForm>(emptyAddressForm());
+  const [updatingAddress, setUpdatingAddress] = useState(false);
+
+  const loadProfile = async () => {
+    setProfileLoading(true);
+    setProfileError(null);
+    try {
+      const res = await api.get<ApiResponse<User>>("/me");
+      const user = res.data.data;
+
+      if (token) {
+        setAuth(user, token);
       }
-    };
-
-    if (!authUser) {
-      fetchProfile();
-    } else {
-      setLoading(false);
+      setProfileForm({ name: user.name, phone: user.phone ?? "" });
+    } catch (error) {
+      const err = error as AxiosError<{ message: string }>;
+      const message = err?.response?.data?.message ?? "Gagal memuat profil";
+      setProfileError(message);
+    } finally {
+      setProfileLoading(false);
     }
-  }, [authUser, setAuth, token]);
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const loadAddresses = async () => {
+    setAddressesLoading(true);
+    setAddressesError(null);
+    try {
+      const res = await api.get<ApiResponse<UserAddress[]>>("/me/addresses");
+      setAddresses(res.data.data);
+    } catch (error) {
+      const err = error as AxiosError<{ message: string }>;
+      const message =
+        err.response?.data?.message ?? "Gagal memuat alamat pengiriman";
+      setAddressesError(message);
+    } finally {
+      setAddressesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProfile();
+    loadAddresses();
+    // eslint-disable-next-line
+  }, []);
+
+  const handleProfileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setProfileForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleProfileSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    setError(null);
-    setSuccess(null);
+    setProfileSaving(true);
+    setProfileError(null);
+    setProfileSuccess(null);
 
     try {
-      const res = await api.put<{ success: boolean; data: User }>("/me", form);
-      const updatedUser = res.data.data;
+      const res = await api.put<{ success: boolean; data: User }>(
+        "/me",
+        profileForm,
+      );
+      const updated = res.data.data;
       if (token) {
-        setAuth(updatedUser, token);
+        setAuth(updated, token);
       }
-      setSuccess("Profil berhasil diperbarui");
+      setProfileSuccess("Profil berhasil diperbarui");
     } catch (error) {
       const err = error as AxiosError<{ message: string }>;
       const message = err?.response?.data?.message ?? "Gagal update profil";
-      setError(message);
+      setProfileError(message);
     } finally {
-      setSaving(false);
+      setProfileSaving(false);
+    }
+  };
+
+  const handleNewAddressChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    // eslint-disable-next-line
+    const { name, value, type, checked } = e.target as any;
+    setNewAddressForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleCreateAddress = async (e: FormEvent) => {
+    e.preventDefault();
+    setCreatingAddress(true);
+    try {
+      await api.post("/me/addresses", newAddressForm);
+      setNewAddressForm(emptyAddressForm());
+      await loadAddresses();
+    } catch (error) {
+      const err = error as AxiosError<{ message: string }>;
+      const message =
+        err.response?.data?.message ?? "Gagal menambahkan alamat baru";
+      alert(message);
+    } finally {
+      setCreatingAddress(false);
+    }
+  };
+
+  const startEditAddress = (addr: UserAddress) => {
+    setEditingAddress(addr);
+    setEditingAddressForm({
+      label: addr.label,
+      recipientName: addr.recipientName,
+      phone: addr.phone,
+      addressLine1: addr.addressLine1,
+      addressLine2: addr.addressLine2 ?? "",
+      city: addr.city,
+      province: addr.province,
+      postalCode: addr.postalCode,
+      country: addr.country,
+      isDefault: addr.isDefault,
+    });
+  };
+
+  const handleEditAddressChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    // eslint-disable-next-line
+    const { name, value, type, checked } = e.target as any;
+    setEditingAddressForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleUpdateAddress = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!editingAddress) return;
+    setUpdatingAddress(true);
+
+    try {
+      await api.put(`/me/addresses/${editingAddress.id}`, editingAddressForm);
+      setEditingAddress(null);
+      loadAddresses();
+    } catch (error) {
+      const err = error as AxiosError<{ message: string }>;
+      const message = err.response?.data?.message ?? "Gagal memperbarui alamat";
+      alert(message);
+    } finally {
+      setUpdatingAddress(false);
+    }
+  };
+
+  const handleDeletAddress = async (addr: UserAddress) => {
+    if (!window.confirm(`Hapus alamat ${addr.label} di ${addr.city}`)) {
+      return;
+    }
+
+    try {
+      await api.delete(`/me/addresses/${addr.id}`);
+      await loadAddresses();
+    } catch (error) {
+      const err = error as AxiosError<{ message: string }>;
+      const message = err.response?.data?.message ?? "Gagal menghapus alamat";
+      alert(message);
     }
   };
 
