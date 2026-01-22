@@ -4,10 +4,14 @@ import { Order, OrderStatus } from "../entities/Order";
 import { Invoice } from "../entities/Invoice";
 import { OrderRepository } from "../repositories/OrderRepository";
 import { AppError } from "../core/AppError";
+import { NotificationService } from "./NotificationService";
+import { logger } from "../libs/logger";
+
+const notificationService = new NotificationService();
 
 function isValidStatusTransition(
   current: OrderStatus,
-  next: OrderStatus
+  next: OrderStatus,
 ): boolean {
   if (current === next) return true;
 
@@ -42,7 +46,7 @@ export class OrderService {
 
   async createOrderIfNotExistsForInvoice(
     invoice: Invoice,
-    manager?: EntityManager
+    manager?: EntityManager,
   ): Promise<Order | null> {
     const repo = manager
       ? manager.getRepository(Order)
@@ -57,7 +61,7 @@ export class OrderService {
       throw new AppError(
         "Subscription untuk invoice tidak ditemukan",
         400,
-        "SUBSCRIPTION_NOT_FOUND"
+        "SUBSCRIPTION_NOT_FOUND",
       );
     }
 
@@ -99,7 +103,7 @@ export class OrderService {
     orderId: number,
     newStatus: OrderStatus,
     shippingCourier?: string,
-    trackingNumber?: string
+    trackingNumber?: string,
   ) {
     const order = await this.orderRepo.findByIdWithRelations(orderId);
     if (!order) {
@@ -110,7 +114,7 @@ export class OrderService {
       throw new AppError(
         `Perubahan status dari ${order.status} ke ${newStatus} tidak diizinkan`,
         400,
-        "INVALID_STATUS_TRANSITION"
+        "INVALID_STATUS_TRANSITION",
       );
     }
 
@@ -131,6 +135,13 @@ export class OrderService {
 
     order.status = newStatus;
 
-    return this.orderRepo.save(order);
+    const saved = await this.orderRepo.save(order);
+    try {
+      await notificationService.sendOrderStatusUpdate(saved);
+    } catch (error) {
+      logger.warn("Gagal mengirim email notifikasi status order", error);
+    }
+
+    return saved;
   }
 }
