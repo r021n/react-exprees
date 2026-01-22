@@ -4,6 +4,10 @@ import { api } from "../lib/api";
 import { useAuthStore } from "../store/authStore";
 import type { AuthResponse } from "../types/auth";
 import { AxiosError } from "axios";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Card } from "../components/ui/Card";
+import { Alert } from "../components/ui/Alert";
 
 function Login() {
   const navigate = useNavigate();
@@ -29,7 +33,7 @@ function Login() {
     try {
       const res = await api.post<{ success: boolean; data: AuthResponse }>(
         "/auth/login",
-        form
+        form,
       );
       const { token, user } = res.data.data;
       setAuth(user, token);
@@ -45,39 +49,63 @@ function Login() {
   };
 
   return (
-    <div style={{ maxWidth: 400 }}>
-      <h2>Login</h2>
-      {error && <p style={{ color: "red", marginBottom: "0.5rem" }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "0.5rem" }}>
-          <label>Email</label>
-          <input
-            type="email"
-            name="email"
-            required
-            value={form.email}
-            onChange={handleChange}
-            style={{ width: "100%" }}
-          />
+    <div className="flex min-h-[80vh] items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
+            Masuk ke akun Anda
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Atau{" "}
+            <Link
+              to="/register"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              daftar akun baru
+            </Link>
+          </p>
         </div>
-        <div style={{ marginBottom: "0.5rem" }}>
-          <label>Password</label>
-          <input
-            type="password"
-            name="password"
-            required
-            value={form.password}
-            onChange={handleChange}
-            style={{ width: "100%" }}
-          />
-        </div>
-        <button type="submit" disabled={submitting}>
-          {submitting ? "Masuk..." : "Masuk"}
-        </button>
-      </form>
-      <p style={{ marginTop: "0.5rem" }}>
-        Belum punya akun ? <Link to="/register">Daftar di sini</Link>
-      </p>
+
+        {error && (
+          <Alert variant="error" title="Gagal Masuk">
+            {error}
+          </Alert>
+        )}
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <Input
+              label="Email"
+              type="email"
+              name="email"
+              autoComplete="email"
+              required
+              value={form.email}
+              onChange={handleChange}
+            />
+            <Input
+              label="Password"
+              type="password"
+              name="password"
+              autoComplete="current-password"
+              required
+              value={form.password}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <Button
+              type="submit"
+              disabled={submitting}
+              isLoading={submitting}
+              className="w-full"
+            >
+              Masuk
+            </Button>
+          </div>
+        </form>
+      </Card>
     </div>
   );
 }

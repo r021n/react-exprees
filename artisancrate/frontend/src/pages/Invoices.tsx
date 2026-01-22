@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import type { ApiResponse } from "../types/common";
 import type { Invoice } from "../types/invoice";
 import { formatDate, formatPriceIDR } from "../lib/format";
 import { AxiosError } from "axios";
+import { Alert } from "../components/ui/Alert";
+import { Button } from "../components/ui/Button";
+import clsx from "clsx";
 
 function Invoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [payingId, setPayingId] = useState<number | null>(null);
-
-  const navigate = useNavigate();
 
   const load = async () => {
     setLoading(true);
@@ -37,7 +38,7 @@ function Invoices() {
     setPayingId(inv.id);
     try {
       const res = await api.post<ApiResponse<Invoice>>(
-        `/invoices/${inv.id}/pay`
+        `/invoices/${inv.id}/pay`,
       );
       const updated = res.data.data;
       if (updated.midtransPaymentLink) {
@@ -56,59 +57,117 @@ function Invoices() {
   };
 
   return (
-    <div>
-      <h2>Invoice</h2>
-      {loading && <p>Memuat invoice...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+    <div className="mx-auto max-w-5xl py-6">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">Riwayat Invoice</h2>
 
-      {!loading && !error && invoices.length === 0 && <p>Belum ada invoice</p>}
+      {loading && (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-16 bg-gray-100 animate-pulse rounded-lg"
+            ></div>
+          ))}
+        </div>
+      )}
+
+      {error && <Alert variant="error">{error}</Alert>}
+
+      {!loading && !error && invoices.length === 0 && (
+        <div className="text-center py-12 bg-white rounded-lg border border-dashed border-gray-300">
+          <p className="text-gray-500 mb-4">Belum ada invoice.</p>
+        </div>
+      )}
 
       {!loading && !error && invoices.length > 0 && (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            marginTop: "1rem",
-          }}
-        >
-          <thead>
-            <tr>
-              <th style={{ borderBottom: "1px solid #ddd" }}>Nomor</th>
-              <th style={{ borderBottom: "1px solid #ddd" }}>Jumlah</th>
-              <th style={{ borderBottom: "1px solid #ddd" }}>Status</th>
-              <th style={{ borderBottom: "1px solid #ddd" }}>Jatuh Tempo</th>
-              <th style={{ borderBottom: "1px solid #ddd" }}>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoices.map((inv) => (
-              <tr key={inv.id}>
-                <td style={{ padding: "0.5rem 0" }}>
-                  <button
-                    style={{ textDecoration: "underline", cursor: "pointer" }}
-                    onClick={() => navigate(`/invoices/${inv.id}`)}
+        <div className="overflow-hidden bg-white shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-300">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th
+                    scope="col"
+                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
                   >
-                    {inv.invoiceNumber}
-                  </button>
-                </td>
-                <td>{formatPriceIDR(inv.amount)}</td>
-                <td>{inv.status}</td>
-                <td>{formatDate(inv.dueDate)}</td>
-                <td>
-                  {inv.status === "pending" && (
-                    <button
-                      disabled={payingId === inv.id}
-                      onClick={() => handlePay(inv)}
-                    >
-                      {payingId === inv.id ? "Memproses..." : "Bayar"}
-                    </button>
-                  )}
-                  {inv.status === "paid" && <span>Sudah dibayar...</span>}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    Nomor Invoice
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                  >
+                    Jumlah
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                  >
+                    Status
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                  >
+                    Jatuh Tempo
+                  </th>
+                  <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                    <span className="sr-only">Aksi</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {invoices.map((inv) => (
+                  <tr key={inv.id}>
+                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-indigo-600 sm:pl-6">
+                      <Link
+                        to={`/invoices/${inv.id}`}
+                        className="hover:text-indigo-900"
+                      >
+                        {inv.invoiceNumber}
+                      </Link>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">
+                      {formatPriceIDR(inv.amount)}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm">
+                      <span
+                        className={clsx(
+                          "inline-flex rounded-full px-2 text-xs font-semibold leading-5",
+                          inv.status === "paid"
+                            ? "bg-green-100 text-green-800"
+                            : inv.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-gray-100 text-gray-800",
+                        )}
+                      >
+                        {inv.status}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                      {formatDate(inv.dueDate)}
+                    </td>
+                    <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                      {inv.status === "pending" && (
+                        <Button
+                          size="sm"
+                          onClick={() => handlePay(inv)}
+                          disabled={payingId === inv.id}
+                          isLoading={payingId === inv.id}
+                        >
+                          Bayar
+                        </Button>
+                      )}
+                      {inv.status === "paid" && (
+                        <span className="text-gray-400 text-xs italic">
+                          Lunas
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );
