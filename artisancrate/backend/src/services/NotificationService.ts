@@ -86,4 +86,80 @@ export class NotificationService {
   }
 
   // 2) Payment success
+  async sendPaymentSuccess(invoice: Invoice) {
+    const user = (invoice as any).user;
+    const sub = (invoice as any).userSubscription;
+    const plan = sub?.subscriptionPlan;
+
+    if (!user || !user.email) {
+      logger.warn(
+        "[Email] tidak bisa kirim email payment success, user/mail tidak tersedia",
+        { invoiceId: invoice.id },
+      );
+      return;
+    }
+
+    const subject = `Pembayaran berhasil - Invoice ${invoice.invoiceNumber}`;
+
+    const textLines = [
+      `Halo ${user.name || user.email},`,
+      "",
+      "Terima kasih, pembayaran Anda telah kami terima.",
+      "",
+      `Nomor Invoice: ${invoice.invoiceNumber}`,
+      `Paket: ${plan?.name ?? "-"}`,
+      `Jumlah: Rp ${invoice.amount.toLocaleString("id-ID")}`,
+      `Dibayar pada: ${formatDate(invoice.paidAt ?? null)}`,
+      "",
+      "Pesanan Anda akan segera diproses.",
+      "ArtisanCrate",
+    ];
+
+    await this.send({ to: user.email, subject, text: textLines.join("\n") });
+  }
+
+  async sendOrderStatusUpdate(order: Order) {
+    const user = (order as any).user;
+    const sub = (order as any).userSubscription;
+    const plan = sub?.subscriptionPlan;
+
+    if (!user || !user.email) {
+      logger.warn(
+        "[Email] tidak bisa kirim email update order, user/mail tidak tersedia",
+        { orderId: order.id },
+      );
+      return;
+    }
+
+    let statusText = "";
+    if (order.status === "pending_fulfillment") {
+      statusText = "Pesanan Anda menunggu diproses.";
+    } else if (order.status === "being_prepared") {
+      statusText = "Pesanan Anda sedang dipersiapkan.";
+    } else if (order.status === "shipped") {
+      statusText = "Pesanan Anda telah dikirim.";
+    } else if (order.status === "delivered") {
+      statusText = "Pesanan Anda telah diterima.";
+    } else if (order.status === "cancelled") {
+      statusText = "Pesanan Anda dibatalkan.";
+    }
+
+    const subject = `Status Pesanan #${order.id} - ${order.status}`;
+
+    const textLines = [
+      `Halo ${user.name || user.email},`,
+      "",
+      `Berikut update status pesanan Anda (#${order.id}):`,
+      statusText,
+      "",
+      `Paket: ${plan?.name ?? "-"}`,
+      `Kurir: ${order.shippingCourier || "-"}`,
+      `Nomor Resi: ${order.trackingNumber || "-"}`,
+      "",
+      "Terima kasih.",
+      "ArtisanCrate",
+    ];
+
+    await this.send({ to: user.email, subject, text: textLines.join("\n") });
+  }
 }
