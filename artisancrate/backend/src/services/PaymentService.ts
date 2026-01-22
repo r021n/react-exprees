@@ -13,8 +13,10 @@ import { MidtransNotificationBody } from "../types/midtrans";
 import { addMonths, addWeeks, toDateOnly } from "../libs/dateUtils";
 import { logger } from "../libs/logger";
 import { OrderService } from "./OrderService";
+import { NotificationService } from "./NotificationService";
 
 const orderService = new OrderService();
+const notificationService = new NotificationService();
 
 export class PaymentService {
   /**
@@ -53,7 +55,7 @@ export class PaymentService {
       throw new AppError(
         "Paket langganan untuk invoice ini tidak ditemukan",
         400,
-        "PLAN_NOT_FOUND"
+        "PLAN_NOT_FOUND",
       );
     }
 
@@ -61,7 +63,7 @@ export class PaymentService {
       throw new AppError(
         "User untuk invoice ini tidak ditemukan",
         400,
-        "USER_NOT_FOUND"
+        "USER_NOT_FOUND",
       );
     }
 
@@ -104,12 +106,20 @@ export class PaymentService {
       invoice.midtransOrderId = orderId;
       invoice.midtransPaymentLink = redirect_url;
 
-      return await invoiceRepo.save(invoice);
+      const saved = await invoiceRepo.save(invoice);
+
+      try {
+        await notificationService.sendInvoicePaymentLink(saved);
+      } catch (error) {
+        logger.warn("Gagal mengirim email invoice payment link", error);
+      }
+
+      return saved;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         logger.error(
           "Error createMidtransTransaction",
-          error?.response?.data || error
+          error?.response?.data || error,
         );
       } else {
         logger.error("Error createMidtransTransaction", error);
@@ -118,7 +128,7 @@ export class PaymentService {
       throw new AppError(
         "Gagal membuat transaksi pembayaran",
         500,
-        "MIDTRANS_ERROR"
+        "MIDTRANS_ERROR",
       );
     }
   }
@@ -128,12 +138,12 @@ export class PaymentService {
    * Idempotent: kalau invoice sudah paid & order sudah ada, tidak bikin dobel.
    */
   async handleMidtransNotification(
-    body: MidtransNotificationBody
+    body: MidtransNotificationBody,
   ): Promise<void> {
     const expectedSignature = computeMidtransSignature(
       body.order_id,
       body.status_code,
-      body.gross_amount
+      body.gross_amount,
     );
 
     if (expectedSignature !== body.signature_key) {
@@ -141,13 +151,16 @@ export class PaymentService {
       throw new AppError(
         "Invalid Midtrans signature",
         403,
-        "INVALID_SIGNATURE"
+        "INVALID_SIGNATURE",
       );
     }
 
     const orderId = body.order_id;
     const transactionStatus = body.transaction_status;
     const fraudStatus = body.fraud_status;
+
+    let shouldSendPaymentEmail = false;
+    let paidInvoiceId: number | null = null;
 
     await AppDataSource.transaction(async (manager) => {
       const invoiceRepo = manager.getRepository(Invoice);
@@ -219,10 +232,36 @@ export class PaymentService {
         }
 
         await orderService.createOrderIfNotExistsForInvoice(invoice, manager);
+
+        shouldSendPaymentEmail = true;
+        paidInvoiceId = invoice.id;
       }
 
       await invoiceRepo.save(invoice);
     });
+
+    if (shouldSendPaymentEmail && paidInvoiceId) {
+      try {
+        const fullInvoice = await AppDataSource.getRepository(Invoice).findOne({
+          where: { id: paidInvoiceId },
+          relations: {
+            user: true,
+            userSubscription: {
+              subscriptionPlan: true,
+            },
+          },
+        });
+
+        if (fullInvoice) {
+          await notificationService.sendPaymentSuccess(fullInvoice);
+        }
+      } catch (error) {
+        logger.warn("Gagal mengirim email payment success untuk invoice", {
+          invoiceId: paidInvoiceId,
+          error,
+        });
+      }
+    }
 
     logger.info("Processed Midtrans notification", {
       orderId,
