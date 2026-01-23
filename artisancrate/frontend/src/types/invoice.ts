@@ -1,4 +1,5 @@
 import type { SubscriptionPlan } from "./subscription";
+import type { UserAddress } from "./address";
 
 export type InvoiceStatus =
   | "pending"
@@ -26,5 +27,6 @@ export interface Invoice {
   userSubscription?: {
     id: number;
     subscriptionPlan?: SubscriptionPlan;
+    shippingAddress?: UserAddress;
   };
 }
