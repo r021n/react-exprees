@@ -5,6 +5,11 @@ import type { Product } from "../../types/product";
 import type { SubscriptionPlan } from "../../types/subscription";
 import { formatPriceIDR } from "../../lib/format";
 import { AxiosError } from "axios";
+import { Card } from "../../components/ui/Card";
+import { Alert } from "../../components/ui/Alert";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import clsx from "clsx";
 
 interface CreatePlanForm {
   name: string;
@@ -127,162 +132,241 @@ function AdminSubscriptionPlans() {
   };
 
   return (
-    <div>
-      <h2>Subscription Plans</h2>
-      {loading && <p>Memuat data...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {!loading && plans.length > 0 && (
-        <>
-          <h2>Daftar Plan Aktif</h2>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              marginTop: "0.5rem",
-            }}
-          >
-            <thead>
-              <tr>
-                <th style={{ borderBottom: "1px solid #ddd" }}>Nama</th>
-                <th style={{ borderBottom: "1px solid #ddd" }}>Harga</th>
-                <th style={{ borderBottom: "1px solid #ddd" }}>Periode</th>
-                <th style={{ borderBottom: "1px solid #ddd" }}>Status</th>
-                <th style={{ borderBottom: "1px solid #ddd" }}>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {plans.map((p) => (
-                <tr key={p.id}>
-                  <td style={{ padding: "0.5rem 0" }}>{p.name}</td>
-                  <td>{formatPriceIDR(p.price)}</td>
-                  <td>
-                    {p.billingPeriod === "monthly" ? "bulanan" : "mingguan"} (
-                    {p.billingInterval})
-                  </td>
-                  <td>{p.isActive ? "Aktif" : "Tidak Aktif"}</td>
-                  <td>
-                    <button
-                      disabled={savingId === p.id}
-                      onClick={() => toggleActive(p)}
-                    >
-                      {savingId === p.id
-                        ? "Menyimpan..."
-                        : p.isActive
-                          ? "Nonaktifkan"
-                          : "Aktifkan"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p style={{ fontSize: "0.85rem", marginTop: "0.25rem" }}>
-            Endpoint ini menampilkan semua plan (aktif maupun tidak aktif).
-            Hanya plan aktif yang dipakai di halaman publik.
-          </p>
-        </>
-      )}
-
-      <h3 style={{ marginTop: "1.5rem" }}>Buat Plan Baru</h3>
-      <form
-        onSubmit={handleCreate}
-        style={{ maxWidth: 400, display: "grid", gap: "0.5rem" }}
-      >
-        <div>
-          <label>Nama</label>
-          <input
-            type="text"
-            value={form.name}
-            onChange={(e) => {
-              setForm((f) => ({ ...f, name: e.target.value }));
-            }}
-            required
-          />
-        </div>
-        <div>
-          <label>Deskripsi</label>
-          <textarea
-            value={form.description}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, description: e.target.value }))
-            }
-          />
-        </div>
-        <div>
-          <label>Billing Period</label>
-          <select
-            value={form.billingPeriod}
-            onChange={(e) =>
-              setForm((f) => ({
-                ...f,
-                billingPeriod: e.target.value as "weekly" | "monthly",
-              }))
-            }
-          >
-            <option value="monthly">Bulanan</option>
-            <option value="weekly">Mingguan</option>
-          </select>
-        </div>
-        <div>
-          <label>Billing Interval</label>
-          <input
-            type="number"
-            min={1}
-            value={form.billingInterval}
-            onChange={(e) =>
-              setForm((f) => ({
-                ...f,
-                billingInterval: Number(e.target.value),
-              }))
-            }
-          />
-        </div>
-        <div>
-          <label>Harge (IDR)</label>
-          <input
-            type="number"
-            min={0}
-            value={form.price}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, price: Number(e.target.value) }))
-            }
-          />
-        </div>
-        <div>
-          <label>Produk (Isi)</label>
-          <select
-            value={form.productId}
-            onChange={(e) =>
-              setForm((f) => ({
-                ...f,
-                productId: e.target.value ? Number(e.target.value) : "",
-              }))
-            }
-          >
-            <option>--- pilih produk ---</option>
-            {products.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name} ({p.type})
-              </option>
+    <div className="py-6 space-y-8">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          Subscription Plans
+        </h2>
+        {loading && (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-16 bg-gray-100 animate-pulse rounded-lg"
+              ></div>
             ))}
-          </select>
+          </div>
+        )}
+        {error && <Alert variant="error">{error}</Alert>}
+
+        {!loading && plans.length > 0 && (
+          <div className="overflow-hidden bg-white shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-300">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
+                    >
+                      Nama
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      Harga
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      Periode
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      Status
+                    </th>
+                    <th
+                      scope="col"
+                      className="relative py-3.5 pl-3 pr-4 sm:pr-6"
+                    >
+                      <span className="sr-only">Aksi</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {plans.map((p) => (
+                    <tr key={p.id}>
+                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                        {p.name}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        {formatPriceIDR(p.price)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        {p.billingPeriod === "monthly" ? "Bulanan" : "Mingguan"}{" "}
+                        ({p.billingInterval})
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm">
+                        <span
+                          className={clsx(
+                            "inline-flex rounded-full px-2 text-xs font-semibold leading-5",
+                            p.isActive
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800",
+                          )}
+                        >
+                          {p.isActive ? "Aktif" : "Tidak Aktif"}
+                        </span>
+                      </td>
+                      <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                        <Button
+                          size="sm"
+                          variant={p.isActive ? "danger" : "primary"}
+                          disabled={savingId === p.id}
+                          onClick={() => toggleActive(p)}
+                          isLoading={savingId === p.id}
+                        >
+                          {p.isActive ? "Nonaktifkan" : "Aktifkan"}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="bg-gray-50 px-4 py-3 text-xs text-gray-500 border-t border-gray-200 sm:px-6">
+              Endpoint ini menampilkan semua plan (aktif maupun tidak aktif).
+              Hanya plan aktif yang dipakai di halaman publik.
+            </div>
+          </div>
+        )}
+      </div>
+
+      <Card>
+        <div className="p-6">
+          <h3 className="text-lg font-medium leading-6 text-gray-900 mb-5">
+            Buat Plan Baru
+          </h3>
+          <form onSubmit={handleCreate} className="space-y-6 max-w-2xl">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nama Plan
+              </label>
+              <Input
+                type="text"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Deskripsi
+              </label>
+              <textarea
+                rows={3}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                value={form.description}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+              <div className="sm:col-span-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Billing Period
+                </label>
+                <select
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  value={form.billingPeriod}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      billingPeriod: e.target.value as "weekly" | "monthly",
+                    })
+                  }
+                >
+                  <option value="monthly">Bulanan</option>
+                  <option value="weekly">Mingguan</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Billing Interval
+                </label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={form.billingInterval}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      billingInterval: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              <div className="sm:col-span-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Harga (IDR)
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.price}
+                  onChange={(e) =>
+                    setForm({ ...form, price: Number(e.target.value) })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 border-t border-gray-200 pt-6">
+              <div className="sm:col-span-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Produk (Isi Paket)
+                </label>
+                <select
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  value={form.productId}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      productId: e.target.value ? Number(e.target.value) : "",
+                    })
+                  }
+                >
+                  <option value="">--- Pilih Produk ---</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.type})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Quantity
+                </label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={form.quantity}
+                  onChange={(e) =>
+                    setForm({ ...form, quantity: Number(e.target.value) })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <Button type="submit" isLoading={creating} disabled={creating}>
+                Buat Plan
+              </Button>
+            </div>
+          </form>
         </div>
-        <div>
-          <label>Quantity</label>
-          <input
-            type="number"
-            value={form.quantity}
-            min={0}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, quantity: Number(e.target.value) }))
-            }
-          />
-        </div>
-        <button type="submit" disabled={creating}>
-          {creating ? "Membuat..." : "Buat Plan"}
-        </button>
-      </form>
+      </Card>
     </div>
   );
 }
